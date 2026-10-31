@@ -20,10 +20,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkle,
+  UserCheck,
 } from 'lucide-react';
 import { NAVIGATION_ITEMS, NavItem } from '../../constants/navigation';
 import { Badge } from '../ui/Badge';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -49,6 +51,7 @@ const iconMap: Record<string, React.ElementType> = {
   BarChart3,
   ShieldCheck,
   Settings,
+  UserCheck,
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -126,10 +129,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     );
   };
 
-  const coreItems = NAVIGATION_ITEMS.filter((i) => i.section === 'core');
-  const operationsItems = NAVIGATION_ITEMS.filter((i) => i.section === 'operations');
-  const intelligenceItems = NAVIGATION_ITEMS.filter((i) => i.section === 'intelligence');
-  const systemItems = NAVIGATION_ITEMS.filter((i) => i.section === 'system');
+  const { role } = useAuth();
+  const currentRole = role || 'ADMIN';
+  const isVisible = (item: NavItem) => !item.allowedRoles || item.allowedRoles.includes(currentRole);
+
+  const coreItems = NAVIGATION_ITEMS.filter((i) => i.section === 'core' && isVisible(i));
+  const operationsItems = NAVIGATION_ITEMS.filter((i) => i.section === 'operations' && isVisible(i));
+  const intelligenceItems = NAVIGATION_ITEMS.filter((i) => i.section === 'intelligence' && isVisible(i));
+  const systemItems = NAVIGATION_ITEMS.filter((i) => i.section === 'system' && isVisible(i));
 
   const sidebarContent = (
     <aside
@@ -174,10 +181,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation Links Area */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {renderNavSection('Overview', coreItems)}
-        {renderNavSection('Revenue Operations', operationsItems)}
-        {renderNavSection('Intelligence & Differentiators', intelligenceItems)}
-        {renderNavSection('Administration', systemItems)}
+        {coreItems.length > 0 && renderNavSection('Overview', coreItems)}
+        {operationsItems.length > 0 && renderNavSection('Revenue Operations', operationsItems)}
+        {intelligenceItems.length > 0 && renderNavSection('Intelligence & Differentiators', intelligenceItems)}
+        {systemItems.length > 0 && renderNavSection('Administration', systemItems)}
       </nav>
 
       {/* Footer / Architecture badge */}
@@ -186,14 +193,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="rounded-xl border border-slate-200 dark:border-loopnex-surfaceBorder p-2.5 bg-white dark:bg-loopnex-surface/50">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-semibold text-slate-700 dark:text-loopnex-primaryText">
-                COMMIT 01
+                COMMIT 02
               </span>
               <span className="text-[9px] font-mono text-loopnex-electricTeal font-medium">
-                v0.1.0-alpha
+                Identity &amp; RBAC
               </span>
             </div>
             <p className="text-[10px] text-slate-500 dark:text-loopnex-secondaryText leading-relaxed">
-              Foundation Core & Architecture active.
+              Identity &amp; Access Engine active.
             </p>
           </div>
         </div>

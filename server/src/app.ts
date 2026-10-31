@@ -1,4 +1,5 @@
 import express, { Express } from 'express';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { env } from './config/environment.js';
 import apiRouter from './routes/index.js';
@@ -16,6 +17,7 @@ export function createApp(): Express {
       credentials: true,
     })
   );
+  app.use(cookieParser());
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

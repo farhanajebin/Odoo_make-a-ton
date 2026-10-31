@@ -1,13 +1,16 @@
+import { UserRole } from '../types';
+
 export interface NavItem {
   id: string;
   name: string;
   path: string;
   iconName: string;
   badge?: string;
-  badgeColor?: 'teal' | 'violet' | 'amber' | 'cyan';
+  badgeColor?: 'teal' | 'violet' | 'amber' | 'cyan' | 'slate';
   status: 'active' | 'upcoming' | 'foundation';
   section: 'core' | 'operations' | 'intelligence' | 'system';
   description?: string;
+  allowedRoles?: UserRole[];
 }
 
 export const NAVIGATION_ITEMS: NavItem[] = [
@@ -20,17 +23,43 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'active',
     section: 'core',
     description: 'Executive business overview & revenue performance',
+    allowedRoles: ['ADMIN'],
+  },
+  {
+    id: 'staff-hub',
+    name: 'Staff Operations',
+    path: '/staff/dashboard',
+    iconName: 'Activity',
+    badge: 'Live',
+    badgeColor: 'teal',
+    status: 'active',
+    section: 'core',
+    description: 'Staff operational portal and triage queue',
+    allowedRoles: ['STAFF'],
+  },
+  {
+    id: 'customer-portal',
+    name: 'Customer Portal',
+    path: '/portal/dashboard',
+    iconName: 'LayoutDashboard',
+    badge: 'Live',
+    badgeColor: 'teal',
+    status: 'active',
+    section: 'core',
+    description: 'Self-service customer portal & billing',
+    allowedRoles: ['CUSTOMER'],
   },
   {
     id: 'command-center',
     name: 'Command Center',
     path: '/command-center',
     iconName: 'Activity',
-    badge: 'Commit 02',
+    badge: 'Upcoming',
     badgeColor: 'violet',
     status: 'upcoming',
     section: 'core',
     description: 'Smart operational triage and instant actions',
+    allowedRoles: ['ADMIN'],
   },
 
   // Operations
@@ -44,6 +73,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'operations',
     description: 'Account hierarchy, billing profiles & credit balances',
+    allowedRoles: ['ADMIN', 'STAFF'],
   },
   {
     id: 'products',
@@ -55,6 +85,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'operations',
     description: 'Product catalog, SKUs, and service definitions',
+    allowedRoles: ['ADMIN'],
   },
   {
     id: 'plans-pricing',
@@ -66,6 +97,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'operations',
     description: 'Tiered cadences, prepaid models & custom tiers',
+    allowedRoles: ['ADMIN'],
   },
   {
     id: 'quotations',
@@ -77,6 +109,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'operations',
     description: 'B2B quote builders, negotiation approvals & contract templates',
+    allowedRoles: ['ADMIN', 'STAFF'],
   },
   {
     id: 'subscriptions',
@@ -88,6 +121,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'operations',
     description: 'Lifecycle orchestration, upgrades, downgrades & co-terming',
+    allowedRoles: ['ADMIN', 'STAFF'],
   },
   {
     id: 'invoices',
@@ -99,6 +133,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'operations',
     description: 'Automated billing runs, dunning & tax calculations',
+    allowedRoles: ['ADMIN', 'STAFF'],
   },
   {
     id: 'payments',
@@ -110,6 +145,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'operations',
     description: 'Multi-gateway reconciliation, ACH & card processing',
+    allowedRoles: ['ADMIN'],
   },
   {
     id: 'discounts',
@@ -121,9 +157,10 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'operations',
     description: 'Promotional rules, coupons & referral incentives',
+    allowedRoles: ['ADMIN'],
   },
 
-  // Intelligence (Future Differentiators)
+  // Intelligence
   {
     id: 'renewal-center',
     name: 'Renewal Center',
@@ -134,6 +171,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'intelligence',
     description: 'Smart renewal pipeline, churn early warning & playbooks',
+    allowedRoles: ['ADMIN', 'STAFF'],
   },
   {
     id: 'revenue-radar',
@@ -145,6 +183,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'intelligence',
     description: 'AI-driven detection of unbilled usage and revenue leakage',
+    allowedRoles: ['ADMIN'],
   },
   {
     id: 'intelligence-lab',
@@ -156,6 +195,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'intelligence',
     description: 'What-If revenue simulator and predictive cohort analytics',
+    allowedRoles: ['ADMIN'],
   },
   {
     id: 'reports',
@@ -167,19 +207,33 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'intelligence',
     description: 'GAAP/IFRS revenue recognition, cohort churn, net MRR walks',
+    allowedRoles: ['ADMIN'],
   },
 
   // System
+  {
+    id: 'staff-management',
+    name: 'Staff Management',
+    path: '/admin/staff',
+    iconName: 'UserCheck',
+    badge: 'Commit 02',
+    badgeColor: 'teal',
+    status: 'active',
+    section: 'system',
+    description: 'Admin-only directory to provision and manage operational staff',
+    allowedRoles: ['ADMIN'],
+  },
   {
     id: 'audit-security',
     name: 'Audit & Security',
     path: '/audit',
     iconName: 'ShieldCheck',
-    badge: 'Guardian',
+    badge: 'Commit 02',
     badgeColor: 'amber',
-    status: 'upcoming',
+    status: 'active',
     section: 'system',
     description: 'Billing integrity guardian, immutable logs & SOC2 compliance',
+    allowedRoles: ['ADMIN'],
   },
   {
     id: 'settings',
@@ -189,5 +243,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     status: 'upcoming',
     section: 'system',
     description: 'Environment credentials, webhook dispatchers & team roles',
+    allowedRoles: ['ADMIN'],
   },
 ];

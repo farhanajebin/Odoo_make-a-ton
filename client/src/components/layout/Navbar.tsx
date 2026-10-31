@@ -16,6 +16,8 @@ import {
 import { useTheme } from '../../hooks/useTheme';
 import { useHealth } from '../../hooks/useHealth';
 import { Badge } from '../ui/Badge';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -25,8 +27,23 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
   const { theme, toggleTheme } = useTheme();
   const { health, isBackendOnline, loading: healthLoading } = useHealth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const handleSignOut = async () => {
+    setShowProfileMenu(false);
+    await logout();
+    navigate('/login', { replace: true });
+  };
+
+  const userInitials = (user?.fullName || 'Alex Drake')
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   const notifications = [
     {
@@ -178,14 +195,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
             className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-loopnex-surface transition-colors"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-loopnex-electricTeal to-loopnex-violetAccent text-loopnex-deepNavy font-bold text-xs shadow-sm">
-              AD
+              {userInitials}
             </div>
             <div className="hidden xl:block text-left">
               <p className="text-xs font-semibold text-slate-900 dark:text-loopnex-primaryText leading-none">
-                Alex Drake
+                {user?.fullName || 'Active Session'}
               </p>
               <p className="text-[10px] text-slate-400 dark:text-loopnex-secondaryText mt-0.5">
-                Chief Revenue Officer
+                {user?.role ? `${user.role} Access` : 'RevOps Platform'}
               </p>
             </div>
             <ChevronDown className="h-3.5 w-3.5 text-slate-400 dark:text-loopnex-secondaryText hidden xl:block" />
@@ -195,30 +212,44 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
             <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 dark:border-loopnex-surfaceBorder bg-white dark:bg-loopnex-graphite p-2 shadow-xl z-50">
               <div className="px-3 py-2 border-b border-slate-100 dark:border-loopnex-surfaceBorder/60">
                 <p className="text-xs font-semibold text-slate-900 dark:text-loopnex-primaryText">
-                  Alex Drake
+                  {user?.fullName || 'Active User'}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-loopnex-secondaryText truncate">
-                  alex.drake@enterprise.io
+                  {user?.email || 'user@loopnex.io'}
                 </p>
                 <div className="mt-1.5">
-                  <Badge variant="violet" size="sm">Admin Role</Badge>
+                  <Badge variant={user?.role === 'ADMIN' ? 'violet' : user?.role === 'STAFF' ? 'cyan' : 'teal'} size="sm">
+                    {user?.role || 'CUSTOMER'} Role
+                  </Badge>
                 </div>
               </div>
               <div className="mt-1 space-y-0.5">
-                <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-loopnex-primaryText hover:bg-slate-50 dark:hover:bg-loopnex-surface rounded-lg">
+                <button
+                  onClick={() => setShowProfileMenu(false)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-loopnex-primaryText hover:bg-slate-50 dark:hover:bg-loopnex-surface rounded-lg"
+                >
                   <User className="h-3.5 w-3.5 text-slate-400" />
                   Account Profile
                 </button>
-                <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-loopnex-primaryText hover:bg-slate-50 dark:hover:bg-loopnex-surface rounded-lg">
+                <button
+                  onClick={() => setShowProfileMenu(false)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-loopnex-primaryText hover:bg-slate-50 dark:hover:bg-loopnex-surface rounded-lg"
+                >
                   <Shield className="h-3.5 w-3.5 text-slate-400" />
-                  Security & Access
+                  Security Clearance
                 </button>
-                <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-loopnex-primaryText hover:bg-slate-50 dark:hover:bg-loopnex-surface rounded-lg">
+                <button
+                  onClick={() => setShowProfileMenu(false)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 dark:text-loopnex-primaryText hover:bg-slate-50 dark:hover:bg-loopnex-surface rounded-lg"
+                >
                   <HelpCircle className="h-3.5 w-3.5 text-slate-400" />
-                  Documentation & Support
+                  Documentation &amp; Support
                 </button>
                 <div className="border-t border-slate-100 dark:border-loopnex-surfaceBorder/60 my-1" />
-                <button className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors"
+                >
                   <LogOut className="h-3.5 w-3.5 text-rose-500" />
                   Sign Out
                 </button>

@@ -136,8 +136,10 @@ model User {
   id           String     @id @default(cuid())
   email        String     @unique
   passwordHash String
-  firstName    String
-  lastName     String
+  fullName     String?
+  firstName    String     @default("")
+  lastName     String     @default("")
+  isActive     Boolean    @default(true)
   status       UserStatus @default(ACTIVE)
   roleId       String
   role         Role       @relation(fields: [roleId], references: [id])
@@ -146,9 +148,11 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  staffProfile  Staff?
-  auditLogs     AuditLog[]
-  notifications Notification[]
+  staffProfile        Staff?
+  auditLogs           AuditLog[]
+  notifications       Notification[]
+  passwordResetTokens PasswordResetToken[]
+  refreshTokens       RefreshToken[]
 
   @@index([email])
   @@index([roleId])
@@ -467,17 +471,52 @@ model Notification {
   @@map("notifications")
 }
 
-model AuditLog {
-  id        String      @id @default(cuid())
-  userId    String?
-  user      User?       @relation(fields: [userId], references: [id])
-  action    AuditAction
-  entity    String
-  entityId  String?
-  details   Json?
-  ipAddress String?
-  createdAt DateTime    @default(now())
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
-  @@index([entity, entityId])
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
+}
+
+model RefreshToken {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash        String    @unique
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  replacedByToken  String?
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String   @default("USER")
+  entity     String   @default("USER")
+  entityId   String?
+  metadata   Json?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
   @@map("audit_logs")
 }
+

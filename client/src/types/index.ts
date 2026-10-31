@@ -58,3 +58,65 @@ export interface RenewalItem {
   healthScore: number; // 0-100 preview for future capability
   status: 'low_risk' | 'medium_risk' | 'high_risk';
 }
+
+// -----------------------------------------------------------------------------
+// Identity & Access Engine Types (Commit 02)
+// -----------------------------------------------------------------------------
+export type UserRole = 'ADMIN' | 'STAFF' | 'CUSTOMER';
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  permissions: string[];
+  department?: string | null;
+  phone?: string | null;
+  isActive?: boolean;
+  status?: string;
+  lastLoginAt?: string | null;
+  createdAt?: string;
+}
+
+export interface StaffMember {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  department?: string | null;
+  phone?: string | null;
+  isActive: boolean;
+  status: string;
+  lastLoginAt?: string | null;
+  createdAt: string;
+}
+
+export interface AuditLogItem {
+  id: string;
+  userId?: string | null;
+  action: string;
+  entityType: string;
+  entityId?: string | null;
+  metadata?: Record<string, unknown> | null;
+  ipAddress?: string | null;
+  createdAt: string;
+}
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+  timestamp: string;
+}
+
+export interface AuthResponseData {
+  message?: string;
+  accessToken: string;
+  refreshToken?: string;
+  user: User;
+}
+
