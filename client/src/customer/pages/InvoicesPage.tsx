@@ -4,6 +4,7 @@ import {
   Eye,
   FileDown,
   Printer,
+  CreditCard,
 } from 'lucide-react';
 import { useCustomerData } from '../context/CustomerDataContext';
 import { CustomerInvoice } from '../types';
@@ -12,7 +13,7 @@ import { CustomerBadge } from '../components/common/CustomerBadge';
 import { CustomerModal } from '../components/common/CustomerModal';
 
 export const InvoicesPage: React.FC = () => {
-  const { invoices, profile, downloadInvoicePDF } = useCustomerData();
+  const { invoices, profile, downloadInvoicePDF, payInvoice } = useCustomerData();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -152,6 +153,19 @@ export const InvoicesPage: React.FC = () => {
             <div className="flex items-center justify-between w-full">
               <CustomerBadge statusText={selectedInvoice.status} />
               <div className="flex items-center gap-2">
+                {selectedInvoice.balanceDue > 0 && selectedInvoice.status !== 'Paid' && (
+                  <button
+                    onClick={() => {
+                      payInvoice(selectedInvoice.id);
+                      setSelectedInvoice((prev) =>
+                        prev ? { ...prev, status: 'Paid', amountPaid: prev.total, balanceDue: 0 } : null
+                      );
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
+                  >
+                    <CreditCard className="w-4 h-4" /> Pay Now ({formatCurrency(selectedInvoice.balanceDue)})
+                  </button>
+                )}
                 <button
                   onClick={() => window.print()}
                   className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5"

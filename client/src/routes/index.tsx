@@ -1,9 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
+import { useAuth } from '../context/AuthContext';
 import { StaffLayout } from '../components/layout/StaffLayout';
-import { OverviewPage } from '../pages/OverviewPage';
-import { UpcomingPage } from '../pages/UpcomingPage';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
@@ -16,34 +14,72 @@ import { StaffInvoicesPage } from '../pages/staff/StaffInvoicesPage';
 import { StaffPaymentsPage } from '../pages/staff/StaffPaymentsPage';
 import { StaffReportsPage } from '../pages/staff/StaffReportsPage';
 import { StaffProfilePage } from '../pages/staff/StaffProfilePage';
-import { CustomerPortalPage } from '../pages/customer/CustomerPortalPage';
-import { StaffManagementPage } from '../pages/admin/StaffManagementPage';
-import { AuditSecurityPage } from '../pages/admin/AuditSecurityPage';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import { RoleRoute } from '../components/auth/RoleRoute';
 import { AdminApp } from '../admin/AdminApp';
 import { CustomerApp } from '../customer/CustomerApp';
 
+/**
+ * RootRedirect: Directs authenticated users to their corresponding dashboard
+ * according to role, and unauthenticated visitors to /login.
+ */
+const RootRedirect: React.FC = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#090D1A] text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-slate-400 font-medium tracking-wide">Initializing LOOPNEX...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role === 'ADMIN') {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (user.role === 'STAFF') {
+    return <Navigate to="/staff" replace />;
+  }
+
+  if (user.role === 'CUSTOMER') {
+    return <Navigate to="/customer" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
+};
+
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
+      {/* Root Entry Point with Role-Aware Redirection */}
+      <Route path="/" element={<RootRedirect />} />
+
       {/* Public Authentication Endpoints */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-      {/* NEW INDEPENDENT ADMIN PANEL — Isolated at /admin/* */}
-      <Route path="/admin/*" element={<AdminApp />} />
+      {/* Legacy portal redirect to unified customer portal */}
+      <Route path="/portal/*" element={<Navigate to="/customer" replace />} />
 
-      {/* NEW INDEPENDENT CUSTOMER PORTAL — Isolated at /customer/* */}
-      <Route path="/customer/*" element={<CustomerApp />} />
-
-      {/* Protected Enterprise SaaS Hierarchy */}
+      {/* ADMIN DASHBOARD: Protected strictly for ADMIN role */}
       <Route element={<ProtectedRoute />}>
-        {/* ================================================================= */}
-        {/* STAFF OPERATIONAL DASHBOARD (Floating Black Sidebar & White Canvas) */}
-        {/* ================================================================= */}
+        <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
+          <Route path="/admin/*" element={<AdminApp />} />
+        </Route>
+      </Route>
+
+      {/* STAFF OPERATIONAL DASHBOARD: Protected for STAFF & ADMIN roles */}
+      <Route element={<ProtectedRoute />}>
         <Route element={<RoleRoute allowedRoles={['STAFF', 'ADMIN']} />}>
           <Route element={<StaffLayout />}>
             <Route path="/staff" element={<StaffDashboardPage />} />
@@ -57,41 +93,17 @@ export const AppRoutes: React.FC = () => {
             <Route path="/staff/profile" element={<StaffProfilePage />} />
           </Route>
         </Route>
+      </Route>
 
-        {/* ================================================================= */}
-        {/* CORE PLATFORM & ADMIN INTERFACE (Standard DashboardLayout) */}
-        {/* ================================================================= */}
-        <Route element={<DashboardLayout />}>
-          {/* ADMIN ONLY ROUTES */}
-          <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
-            <Route path="/" element={<OverviewPage />} />
-            <Route path="/admin/staff" element={<StaffManagementPage />} />
-            <Route path="/audit" element={<AuditSecurityPage />} />
-            <Route path="/command-center" element={<UpcomingPage />} />
-            <Route path="/products" element={<UpcomingPage />} />
-            <Route path="/plans" element={<UpcomingPage />} />
-            <Route path="/payments" element={<UpcomingPage />} />
-            <Route path="/discounts" element={<UpcomingPage />} />
-            <Route path="/radar" element={<UpcomingPage />} />
-            <Route path="/intelligence" element={<UpcomingPage />} />
-            <Route path="/reports" element={<UpcomingPage />} />
-            <Route path="/settings" element={<UpcomingPage />} />
-            <Route path="/customers" element={<UpcomingPage />} />
-            <Route path="/quotations" element={<UpcomingPage />} />
-            <Route path="/subscriptions" element={<UpcomingPage />} />
-            <Route path="/invoices" element={<UpcomingPage />} />
-            <Route path="/renewals" element={<UpcomingPage />} />
-          </Route>
-
-          {/* CUSTOMER PORTAL ROUTES */}
-          <Route element={<RoleRoute allowedRoles={['CUSTOMER', 'ADMIN']} />}>
-            <Route path="/portal/dashboard" element={<CustomerPortalPage />} />
-          </Route>
-
-          {/* Fallback Unmatched Routes */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+      {/* CUSTOMER PORTAL: Protected for CUSTOMER & ADMIN roles */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<RoleRoute allowedRoles={['CUSTOMER', 'ADMIN']} />}>
+          <Route path="/customer/*" element={<CustomerApp />} />
         </Route>
       </Route>
+
+      {/* Fallback Unmatched Routes */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

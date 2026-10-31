@@ -9,6 +9,7 @@ import {
   SupportTicket,
   ToastNotification,
   SubscriptionStatus,
+  InvoicePaymentStatus,
 } from '../types';
 
 interface CustomerDataContextType {
@@ -32,6 +33,7 @@ interface CustomerDataContextType {
   togglePauseResumeSubscription: () => void;
   createSupportTicket: (ticket: Omit<SupportTicket, 'id' | 'ticketNumber' | 'createdAt' | 'status'>) => void;
   downloadInvoicePDF: (invoiceId: string) => void;
+  payInvoice: (invoiceId: string, method?: string) => void;
   resetCustomerData: () => void;
 }
 
@@ -474,6 +476,74 @@ export const CustomerDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     showToast(`Support request #${newTicket.ticketNumber} submitted successfully`, 'success');
   }, [showToast]);
 
+  const payInvoice = useCallback(
+    (invoiceId: string, method = 'UPI Instant') => {
+      let targetInv: CustomerInvoice | undefined;
+      setInvoices((prev) =>
+        prev.map((inv) => {
+          if (inv.id === invoiceId) {
+            targetInv = { ...inv, status: 'Paid', amountPaid: inv.total, balanceDue: 0 };
+            return targetInv;
+          }
+          return inv;
+        })
+      );
+
+      const paidAmount = targetInv ? targetInv.total : 1534;
+      const invNum = targetInv ? targetInv.invoiceNumber : 'INV';
+
+      const newPayment: CustomerPayment = {
+        id: `pay-${Date.now()}`,
+        referenceNumber: `PAY-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+        invoiceNumber: invNum,
+        paymentDate: new Date().toISOString().split('T')[0],
+        method,
+        amount: paidAmount,
+        status: 'Completed',
+      };
+      setPayments((prev) => [newPayment, ...prev]);
+
+      // Cross-sync to Admin shared store in localStorage
+      try {
+        const adminInvsRaw = localStorage.getItem('loopnex_admin_v1_invoices');
+        if (adminInvsRaw) {
+          const adminInvs = JSON.parse(adminInvsRaw);
+          const updatedAdminInvs = adminInvs.map((inv: any) =>
+            inv.id === invoiceId || inv.invoiceNumber === invNum
+              ? { ...inv, status: 'Paid', amountPaid: inv.total, balanceDue: 0 }
+              : inv
+          );
+          localStorage.setItem('loopnex_admin_v1_invoices', JSON.stringify(updatedAdminInvs));
+        }
+
+        const adminPaysRaw = localStorage.getItem('loopnex_admin_v1_payments');
+        const adminPays = adminPaysRaw ? JSON.parse(adminPaysRaw) : [];
+        adminPays.unshift({
+          id: newPayment.id,
+          referenceNumber: newPayment.referenceNumber,
+          invoiceId,
+          invoiceNumber: invNum,
+          customerId: profile.id,
+          customerName: profile.company,
+          amount: paidAmount,
+          paymentMethod: method,
+          paymentDate: newPayment.paymentDate,
+          status: 'Completed',
+          notes: 'Settled directly via Customer Portal',
+        });
+        localStorage.setItem('loopnex_admin_v1_payments', JSON.stringify(adminPays));
+
+        // Notify other open dashboard tabs
+        window.dispatchEvent(new CustomEvent('loopnex_store_sync', { detail: { source: 'customer' } }));
+      } catch (err) {
+        console.error('Failed to sync payment to admin store', err);
+      }
+
+      showToast(`Payment of ₹${paidAmount.toLocaleString()} received for invoice ${invNum}`, 'success');
+    },
+    [profile.company, profile.id, showToast]
+  );
+
   const downloadInvoicePDF = useCallback((invoiceId: string) => {
     const inv = invoices.find((i) => i.id === invoiceId);
     showToast(`Generating printable statement for ${inv?.invoiceNumber || 'Invoice'}...`, 'info');
@@ -481,6 +551,93 @@ export const CustomerDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       window.print();
     }, 300);
   }, [invoices, showToast]);
+
+  // Synchronize state when changes happen in Admin Dashboard
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      if (e?.detail?.source === 'customer') return;
+      try {
+        // 1. Sync Plans from Admin
+        const adminPlansRaw = localStorage.getItem('loopnex_admin_v1_plans');
+        if (adminPlansRaw) {
+          const adminPlans = JSON.parse(adminPlansRaw);
+          const activeAdminPlans = adminPlans.filter((p: any) => p.status === 'Active');
+          if (activeAdminPlans.length > 0) {
+            setPlans((prev) => {
+              // Merge newly added admin plans that are not yet in customer plans
+              const existingIds = new Set(prev.map((p) => p.id));
+              const newPlans = activeAdminPlans
+                .filter((p: any) => !existingIds.has(p.id))
+                .map((p: any) => ({
+                  id: p.id,
+                  name: p.name,
+                  description: p.description || `${p.billingFrequency} plan with ${p.pricingMode} pricing`,
+                  price: p.price,
+                  frequency: p.billingFrequency === 'Annual' ? 'Yearly' : 'Monthly',
+                  features: p.features || ['Standard access', 'API Integration', 'Full audit logging'],
+                  isCurrent: false,
+                  recommended: false,
+                }));
+              return newPlans.length > 0 ? [...prev, ...newPlans] : prev;
+            });
+          }
+        }
+
+        // 2. Sync Invoices from Admin
+        const adminInvsRaw = localStorage.getItem('loopnex_admin_v1_invoices');
+        if (adminInvsRaw) {
+          const adminInvs = JSON.parse(adminInvsRaw);
+          if (adminInvs.length > 0) {
+            setInvoices((prev) => {
+              const prevMap = new Map(prev.map((i) => [i.id, i]));
+              const updated = adminInvs.map((inv: any) => {
+                const existing = prevMap.get(inv.id);
+                if (existing) {
+                  return {
+                    ...existing,
+                    status: (inv.status === 'Paid' ? 'Paid' : inv.status === 'Confirmed' ? 'Confirmed' : 'Draft') as InvoicePaymentStatus,
+                    amountPaid: inv.amountPaid || (inv.status === 'Paid' ? inv.total : 0),
+                    balanceDue: inv.balanceDue ?? (inv.status === 'Paid' ? 0 : inv.total),
+                  };
+                }
+                return {
+                  id: inv.id,
+                  invoiceNumber: inv.invoiceNumber,
+                  issueDate: inv.issueDate || inv.createdAt,
+                  dueDate: inv.dueDate,
+                  productName: inv.lines?.[0]?.productName || 'LoopNex Subscription Suite',
+                  status: (inv.status === 'Paid' ? 'Paid' : inv.status === 'Confirmed' ? 'Confirmed' : 'Draft') as InvoicePaymentStatus,
+                  lines: (inv.lines || []).map((l: any) => ({
+                    description: l.productName || l.description || 'Subscription Base',
+                    quantity: l.quantity || 1,
+                    unitPrice: l.unitPrice || 0,
+                    amount: l.total || 0,
+                  })),
+                  subtotal: inv.subtotal,
+                  discount: inv.discount || 0,
+                  taxRate: inv.taxRate || 18,
+                  taxTotal: inv.taxTotal || 0,
+                  total: inv.total,
+                  amountPaid: inv.amountPaid || (inv.status === 'Paid' ? inv.total : 0),
+                  balanceDue: inv.balanceDue ?? (inv.status === 'Paid' ? 0 : inv.total),
+                };
+              });
+              return updated;
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to sync customer state from admin store', err);
+      }
+    };
+
+    window.addEventListener('loopnex_store_sync', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('loopnex_store_sync', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
   const resetCustomerData = useCallback(() => {
     setProfile(INITIAL_PROFILE);
@@ -520,6 +677,7 @@ export const CustomerDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
         togglePauseResumeSubscription,
         createSupportTicket,
         downloadInvoicePDF,
+        payInvoice,
         resetCustomerData,
       }}
     >

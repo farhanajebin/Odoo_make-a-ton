@@ -1717,6 +1717,66 @@ class StoreService {
     if (!quote) return null;
 
     quote.status = status;
+
+    // Auto-convert ACCEPTED quotation into active subscription and confirmed invoice
+    if (status === 'ACCEPTED') {
+      const existingSub = MEMORY_SUBSCRIPTIONS.find(
+        (s) => s.customerId === quote.customerId && s.product === quote.product
+      );
+      if (!existingSub) {
+        const nextSubNum = `SUB-2026-${String(MEMORY_SUBSCRIPTIONS.length + 1).padStart(3, '0')}`;
+        const now = new Date();
+        const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const newSub: SubscriptionOperationalData = {
+          id: `sub_${Date.now()}`,
+          subNumber: nextSubNum,
+          customerId: quote.customerId,
+          customerName: quote.customerName,
+          product: quote.product,
+          variant: quote.variant || 'Standard Edition',
+          plan: 'Standard Enterprise Monthly',
+          cadence: 'MONTHLY',
+          startedAt: now,
+          currentPeriodStart: now,
+          currentPeriodEnd: nextMonth,
+          amount: quote.total,
+          status: 'ACTIVE',
+          addOns: [],
+        };
+        MEMORY_SUBSCRIPTIONS.unshift(newSub);
+
+        const nextInvNum = `INV-2026-${String(MEMORY_INVOICES.length + 1).padStart(3, '0')}`;
+        const dueDate = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
+        const newInv: InvoiceOperationalData = {
+          id: `inv_${Date.now()}`,
+          invoiceNumber: nextInvNum,
+          customerId: quote.customerId,
+          customerName: quote.customerName,
+          customerEmail: `billing@${quote.customerName.toLowerCase().replace(/[^a-z0-9]/g, '')}.io`,
+          subscriptionId: newSub.id,
+          subNumber: nextSubNum,
+          issuedAt: now,
+          dueDate,
+          subtotal: quote.subtotal,
+          taxTotal: quote.taxTotal,
+          discount: quote.discount,
+          total: quote.total,
+          amountPaid: 0,
+          balanceDue: quote.total,
+          status: 'CONFIRMED',
+          lines: [
+            {
+              description: `${quote.product} (${quote.variant || 'Standard'})`,
+              quantity: quote.quantity,
+              unitPrice: quote.unitPrice,
+              total: quote.subtotal,
+            },
+          ],
+        };
+        MEMORY_INVOICES.unshift(newInv);
+      }
+    }
+
     return { ...quote };
   }
 

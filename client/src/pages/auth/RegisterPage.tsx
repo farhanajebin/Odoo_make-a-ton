@@ -62,7 +62,7 @@ export const RegisterPage: React.FC = () => {
       });
 
       // Newly registered customers are redirected to the customer portal
-      navigate('/portal/dashboard', { replace: true });
+      navigate('/customer', { replace: true });
     } catch (err: any) {
       const msg =
         err.response?.data?.error?.message ||

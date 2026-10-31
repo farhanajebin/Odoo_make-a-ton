@@ -26,14 +26,16 @@ export const LoginPage: React.FC = () => {
     try {
       const user = await login(email, password, rememberMe);
       // Redirect according to role
-      if (from && from !== '/' && !from.startsWith('/login')) {
+      if (from && from !== '/' && !from.startsWith('/login') && !from.startsWith('/portal')) {
         navigate(from, { replace: true });
+      } else if (user.role === 'ADMIN') {
+        navigate('/admin', { replace: true });
       } else if (user.role === 'STAFF') {
         navigate('/staff', { replace: true });
       } else if (user.role === 'CUSTOMER') {
-        navigate('/portal/dashboard', { replace: true });
+        navigate('/customer', { replace: true });
       } else {
-        navigate('/', { replace: true });
+        navigate('/admin', { replace: true });
       }
     } catch (err: any) {
       const msg =

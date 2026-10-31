@@ -1075,10 +1075,38 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       localStorage.setItem(`${STORAGE_KEY}_staff`, JSON.stringify(staff));
       localStorage.setItem(`${STORAGE_KEY}_taxes`, JSON.stringify(taxes));
       localStorage.setItem(`${STORAGE_KEY}_settings`, JSON.stringify(settings));
+      window.dispatchEvent(new CustomEvent('loopnex_store_sync', { detail: { source: 'admin' } }));
     } catch {
       // Ignore quota errors
     }
   }, [customers, products, variants, plans, quotations, subscriptions, invoices, discounts, payments, staff, taxes, settings]);
+
+  // Listen for sync events dispatched by Customer Portal or other tabs
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      if (e?.detail?.source === 'admin') return;
+      try {
+        const storedSubs = localStorage.getItem(`${STORAGE_KEY}_subscriptions`);
+        if (storedSubs) setSubscriptions(JSON.parse(storedSubs));
+        const storedInvs = localStorage.getItem(`${STORAGE_KEY}_invoices`);
+        if (storedInvs) setInvoices(JSON.parse(storedInvs));
+        const storedPays = localStorage.getItem(`${STORAGE_KEY}_payments`);
+        if (storedPays) setPayments(JSON.parse(storedPays));
+        const storedCusts = localStorage.getItem(`${STORAGE_KEY}_customers`);
+        if (storedCusts) setCustomers(JSON.parse(storedCusts));
+        const storedPlans = localStorage.getItem(`${STORAGE_KEY}_plans`);
+        if (storedPlans) setPlans(JSON.parse(storedPlans));
+      } catch (err) {
+        console.error('Failed to sync admin state', err);
+      }
+    };
+    window.addEventListener('loopnex_store_sync', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('loopnex_store_sync', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
   // Toast System
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
