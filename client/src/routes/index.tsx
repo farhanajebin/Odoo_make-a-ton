@@ -13,6 +13,7 @@ import { StaffManagementPage } from '../pages/admin/StaffManagementPage';
 import { AuditSecurityPage } from '../pages/admin/AuditSecurityPage';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import { RoleRoute } from '../components/auth/RoleRoute';
+import { AdminApp } from '../admin/AdminApp';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -22,6 +23,9 @@ export const AppRoutes: React.FC = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+      {/* NEW INDEPENDENT ADMIN PANEL — Isolated at /admin/* */}
+      <Route path="/admin/*" element={<AdminApp />} />
 
       {/* Protected Enterprise SaaS Hierarchy */}
       <Route element={<ProtectedRoute />}>
