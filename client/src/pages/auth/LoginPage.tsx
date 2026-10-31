@@ -29,7 +29,7 @@ export const LoginPage: React.FC = () => {
       if (from && from !== '/' && !from.startsWith('/login')) {
         navigate(from, { replace: true });
       } else if (user.role === 'STAFF') {
-        navigate('/staff/dashboard', { replace: true });
+        navigate('/staff', { replace: true });
       } else if (user.role === 'CUSTOMER') {
         navigate('/portal/dashboard', { replace: true });
       } else {

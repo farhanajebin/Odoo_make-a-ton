@@ -4,6 +4,7 @@ import authRoutes from './auth.routes.js';
 import adminRoutes from './admin.routes.js';
 import userRoutes from './user.routes.js';
 import planRoutes from './plan.routes.js';
+import staffRoutes from './staff.routes.js';
 
 const router = Router();
 
@@ -12,6 +13,6 @@ router.use('/auth', authRoutes);
 router.use('/admin', adminRoutes);
 router.use('/users', userRoutes);
 router.use('/plans', planRoutes);
+router.use('/staff', staffRoutes);
 
 export default router;
-

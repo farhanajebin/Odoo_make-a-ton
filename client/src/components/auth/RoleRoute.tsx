@@ -22,7 +22,7 @@ export const RoleRoute: React.FC<RoleRouteProps> = ({ allowedRoles, children }) 
   if (!allowedRoles.includes(role)) {
     // Redirect user to their own role-designated home dashboard
     if (role === 'STAFF') {
-      return <Navigate to="/staff/dashboard" replace />;
+      return <Navigate to="/staff" replace />;
     }
     if (role === 'CUSTOMER') {
       return <Navigate to="/portal/dashboard" replace />;
