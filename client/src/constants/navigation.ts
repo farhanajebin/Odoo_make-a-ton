@@ -1,0 +1,193 @@
+export interface NavItem {
+  id: string;
+  name: string;
+  path: string;
+  iconName: string;
+  badge?: string;
+  badgeColor?: 'teal' | 'violet' | 'amber' | 'cyan';
+  status: 'active' | 'upcoming' | 'foundation';
+  section: 'core' | 'operations' | 'intelligence' | 'system';
+  description?: string;
+}
+
+export const NAVIGATION_ITEMS: NavItem[] = [
+  // Core
+  {
+    id: 'overview',
+    name: 'Overview',
+    path: '/',
+    iconName: 'LayoutDashboard',
+    status: 'active',
+    section: 'core',
+    description: 'Executive business overview & revenue performance',
+  },
+  {
+    id: 'command-center',
+    name: 'Command Center',
+    path: '/command-center',
+    iconName: 'Activity',
+    badge: 'Commit 02',
+    badgeColor: 'violet',
+    status: 'upcoming',
+    section: 'core',
+    description: 'Smart operational triage and instant actions',
+  },
+
+  // Operations
+  {
+    id: 'customers',
+    name: 'Customers',
+    path: '/customers',
+    iconName: 'Users',
+    badge: 'Commit 03',
+    badgeColor: 'cyan',
+    status: 'upcoming',
+    section: 'operations',
+    description: 'Account hierarchy, billing profiles & credit balances',
+  },
+  {
+    id: 'products',
+    name: 'Products',
+    path: '/products',
+    iconName: 'Package',
+    badge: 'Commit 04',
+    badgeColor: 'cyan',
+    status: 'upcoming',
+    section: 'operations',
+    description: 'Product catalog, SKUs, and service definitions',
+  },
+  {
+    id: 'plans-pricing',
+    name: 'Plans & Pricing',
+    path: '/plans',
+    iconName: 'Layers',
+    badge: 'Commit 04',
+    badgeColor: 'cyan',
+    status: 'upcoming',
+    section: 'operations',
+    description: 'Tiered cadences, prepaid models & custom tiers',
+  },
+  {
+    id: 'quotations',
+    name: 'Quotations',
+    path: '/quotations',
+    iconName: 'FileSpreadsheet',
+    badge: 'Commit 05',
+    badgeColor: 'cyan',
+    status: 'upcoming',
+    section: 'operations',
+    description: 'B2B quote builders, negotiation approvals & contract templates',
+  },
+  {
+    id: 'subscriptions',
+    name: 'Subscriptions',
+    path: '/subscriptions',
+    iconName: 'Repeat',
+    badge: 'Commit 06',
+    badgeColor: 'teal',
+    status: 'upcoming',
+    section: 'operations',
+    description: 'Lifecycle orchestration, upgrades, downgrades & co-terming',
+  },
+  {
+    id: 'invoices',
+    name: 'Invoices',
+    path: '/invoices',
+    iconName: 'FileText',
+    badge: 'Commit 07',
+    badgeColor: 'cyan',
+    status: 'upcoming',
+    section: 'operations',
+    description: 'Automated billing runs, dunning & tax calculations',
+  },
+  {
+    id: 'payments',
+    name: 'Payments',
+    path: '/payments',
+    iconName: 'CreditCard',
+    badge: 'Commit 08',
+    badgeColor: 'cyan',
+    status: 'upcoming',
+    section: 'operations',
+    description: 'Multi-gateway reconciliation, ACH & card processing',
+  },
+  {
+    id: 'discounts',
+    name: 'Discounts',
+    path: '/discounts',
+    iconName: 'Tag',
+    badge: 'Upcoming',
+    badgeColor: 'cyan',
+    status: 'upcoming',
+    section: 'operations',
+    description: 'Promotional rules, coupons & referral incentives',
+  },
+
+  // Intelligence (Future Differentiators)
+  {
+    id: 'renewal-center',
+    name: 'Renewal Center',
+    path: '/renewals',
+    iconName: 'RefreshCw',
+    badge: 'Smart Center',
+    badgeColor: 'violet',
+    status: 'upcoming',
+    section: 'intelligence',
+    description: 'Smart renewal pipeline, churn early warning & playbooks',
+  },
+  {
+    id: 'revenue-radar',
+    name: 'Revenue Radar',
+    path: '/radar',
+    iconName: 'Radar',
+    badge: 'Leak Detection',
+    badgeColor: 'violet',
+    status: 'upcoming',
+    section: 'intelligence',
+    description: 'AI-driven detection of unbilled usage and revenue leakage',
+  },
+  {
+    id: 'intelligence-lab',
+    name: 'Intelligence Lab',
+    path: '/intelligence',
+    iconName: 'Sparkles',
+    badge: 'Simulator',
+    badgeColor: 'violet',
+    status: 'upcoming',
+    section: 'intelligence',
+    description: 'What-If revenue simulator and predictive cohort analytics',
+  },
+  {
+    id: 'reports',
+    name: 'Reports',
+    path: '/reports',
+    iconName: 'BarChart3',
+    badge: 'Upcoming',
+    badgeColor: 'cyan',
+    status: 'upcoming',
+    section: 'intelligence',
+    description: 'GAAP/IFRS revenue recognition, cohort churn, net MRR walks',
+  },
+
+  // System
+  {
+    id: 'audit-security',
+    name: 'Audit & Security',
+    path: '/audit',
+    iconName: 'ShieldCheck',
+    badge: 'Guardian',
+    badgeColor: 'amber',
+    status: 'upcoming',
+    section: 'system',
+    description: 'Billing integrity guardian, immutable logs & SOC2 compliance',
+  },
+  {
+    id: 'settings',
+    name: 'Settings',
+    path: '/settings',
+    iconName: 'Settings',
+    status: 'upcoming',
+    section: 'system',
+    description: 'Environment credentials, webhook dispatchers & team roles',
+  },
+];
