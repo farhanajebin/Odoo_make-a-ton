@@ -6,21 +6,16 @@ export const StaffLayout: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F4F7FB] flex text-[#171717] antialiased">
-      {/* Floating Black Vertical Sidebar */}
-      <StaffSidebar
-        isMobileOpen={isMobileOpen}
-        onCloseMobile={() => setIsMobileOpen(false)}
-      />
-
-      {/* Main Content Outer Frame */}
-      <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 md:pl-2">
-        {/* Large White Workspace Container */}
-        <div className="flex-1 bg-white rounded-[28px] border border-[#E9EDF2] shadow-sm p-6 md:p-8 flex flex-col min-w-0">
+    <div className="min-h-screen bg-[#f2f5f9] p-3 text-[#171717] antialiased md:p-4">
+      <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] max-w-[1600px] gap-3 md:min-h-[calc(100vh-2rem)] md:gap-4">
+        <StaffSidebar
+          isMobileOpen={isMobileOpen}
+          onCloseMobile={() => setIsMobileOpen(false)}
+        />
+        <main className="min-w-0 flex-1 rounded-[24px] border border-[#e7ebf0] bg-white p-4 shadow-[0_8px_28px_rgba(15,23,42,0.04)] md:rounded-[28px] md:p-6">
           <Outlet context={{ onToggleMobileMenu: () => setIsMobileOpen(true) }} />
-        </div>
+        </main>
       </div>
     </div>
   );
 };
-
