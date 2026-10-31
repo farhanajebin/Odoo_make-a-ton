@@ -120,3 +120,140 @@ export interface AuthResponseData {
   user: User;
 }
 
+
+// -----------------------------------------------------------------------------
+// Staff Operations Domain Types (Commit 02 / Staff Dashboard Engine)
+// -----------------------------------------------------------------------------
+export interface CustomerItem {
+  id: string;
+  legalName: string;
+  tradingName?: string | null;
+  email: string;
+  phone?: string | null;
+  company: string;
+  customerType: 'ENTERPRISE' | 'MID_MARKET' | 'STARTUP';
+  activeSubscriptions: number;
+  status: 'ACTIVE' | 'PENDING' | 'INACTIVE';
+  assignedStaff?: string | null;
+  address?: string | null;
+  createdAt: string;
+  subscriptions?: Array<{ id: string; subNumber: string; plan: string; amount: number; status: string }>;
+  invoices?: Array<{ id: string; invoiceNumber: string; total: number; balanceDue: number; status: string; dueDate: string }>;
+}
+
+export interface QuotationItem {
+  id: string;
+  quoteNumber: string;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  product: string;
+  variant: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  taxRate: number;
+  taxTotal: number;
+  discount: number;
+  total: number;
+  status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
+  validUntil: string;
+  createdAt: string;
+  notes?: string | null;
+}
+
+export interface SubscriptionItem {
+  id: string;
+  subNumber: string;
+  customerId: string;
+  customerName: string;
+  product: string;
+  variant: string;
+  plan: string;
+  cadence: 'MONTHLY' | 'QUARTERLY' | 'ANNUAL';
+  startedAt: string;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  amount: number;
+  status: 'DRAFT' | 'QUOTATION' | 'CONFIRMED' | 'ACTIVE' | 'CLOSED';
+  addOns: string[];
+}
+
+export interface InvoiceItem {
+  id: string;
+  invoiceNumber: string;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  subscriptionId?: string | null;
+  subNumber?: string | null;
+  issuedAt: string;
+  dueDate: string;
+  subtotal: number;
+  taxTotal: number;
+  discount: number;
+  total: number;
+  amountPaid: number;
+  balanceDue: number;
+  status: 'DRAFT' | 'CONFIRMED' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE' | 'CANCELLED';
+  lines: Array<{ description: string; quantity: number; unitPrice: number; total: number }>;
+}
+
+export interface PaymentItem {
+  id: string;
+  reference: string;
+  customerId: string;
+  customerName: string;
+  invoiceId: string;
+  invoiceNumber: string;
+  method: 'UPI' | 'BANK_TRANSFER' | 'CASH' | 'CARD';
+  paymentDate: string;
+  amount: number;
+  status: 'SUCCEEDED' | 'PENDING' | 'FAILED';
+  notes?: string | null;
+}
+
+export interface StaffOverviewData {
+  assignedCustomers: number;
+  activeSubscriptions: number;
+  pendingQuotations: number;
+  pendingInvoices: number;
+  paymentsCollected: number;
+  overdueInvoices: number;
+  subscriptionTrends: Array<{ month: string; active: number; new: number; churn: number }>;
+  recentActivities: Array<{ id: string; type: string; title: string; description: string; time: string; badge: string; badgeColor: string }>;
+  pendingTasks: Array<{ id: string; type: string; title: string; subtitle: string; urgency: 'high' | 'medium' | 'low'; actionLabel: string; targetPath: string }>;
+}
+
+export interface StaffReportsData {
+  assignedCustomerReport: {
+    totalAccounts: number;
+    activeRate: number;
+    healthScore: number;
+    distribution: Array<{ tier: string; count: number; value: number }>;
+  };
+  subscriptionReport: {
+    totalActive: number;
+    mrr: number;
+    renewalRate: number;
+    plans: Array<{ plan: string; count: number; mrr: number }>;
+  };
+  quotationReport: {
+    totalCreated: number;
+    totalValue: number;
+    winRate: number;
+    statusCounts: Record<string, number>;
+  };
+  invoiceReport: {
+    totalInvoiced: number;
+    totalCollected: number;
+    overdueTotal: number;
+    dsoDays: number;
+    statusCounts: Record<string, number>;
+  };
+  paymentReport: {
+    totalVolume: number;
+    count: number;
+    byMethod: Record<string, number>;
+  };
+}

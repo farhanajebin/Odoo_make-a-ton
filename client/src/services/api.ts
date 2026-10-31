@@ -6,9 +6,16 @@ import {
   AuditLogItem,
   ApiResponse,
   AuthResponseData,
+  CustomerItem,
+  QuotationItem,
+  SubscriptionItem,
+  InvoiceItem,
+  PaymentItem,
+  StaffOverviewData,
+  StaffReportsData,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // In-Memory Token Store (Security: Never store tokens in localStorage)
 let inMemoryAccessToken: string | null = null;
@@ -257,5 +264,106 @@ export const userApi = {
   }): Promise<User> {
     const response = await apiClient.patch<ApiResponse<{ profile: User }>>('/users/me', payload);
     return response.data.data!.profile;
+  },
+};
+
+
+// -----------------------------------------------------------------------------
+// Staff Operational Endpoints (Commit 02 / Staff Dashboard Engine)
+// -----------------------------------------------------------------------------
+export const staffApi = {
+  async getOverview(): Promise<StaffOverviewData> {
+    const response = await apiClient.get<ApiResponse<StaffOverviewData>>('/staff/overview');
+    return response.data.data!;
+  },
+
+  async getCustomers(params?: { search?: string; status?: string; type?: string }): Promise<CustomerItem[]> {
+    const response = await apiClient.get<ApiResponse<{ customers: CustomerItem[] }>>('/staff/customers', { params });
+    return response.data.data?.customers || [];
+  },
+
+  async getCustomerDetails(id: string): Promise<{
+    customer: CustomerItem;
+    subscriptions: SubscriptionItem[];
+    invoices: InvoiceItem[];
+  }> {
+    const response = await apiClient.get<ApiResponse<{
+      customer: CustomerItem;
+      subscriptions: SubscriptionItem[];
+      invoices: InvoiceItem[];
+    }>>(`/staff/customers/${id}`);
+    return response.data.data!;
+  },
+
+  async getQuotations(params?: { search?: string; status?: string }): Promise<QuotationItem[]> {
+    const response = await apiClient.get<ApiResponse<{ quotations: QuotationItem[] }>>('/staff/quotations', { params });
+    return response.data.data?.quotations || [];
+  },
+
+  async createQuotation(payload: {
+    customerId: string;
+    product: string;
+    variant?: string;
+    quantity: number;
+    unitPrice: number;
+    taxRate?: number;
+    discount?: number;
+    validDays?: number;
+    notes?: string;
+  }): Promise<QuotationItem> {
+    const response = await apiClient.post<ApiResponse<{ quotation: QuotationItem }>>('/staff/quotations', payload);
+    return response.data.data!.quotation;
+  },
+
+  async updateQuotationStatus(id: string, status: string): Promise<QuotationItem> {
+    const response = await apiClient.patch<ApiResponse<{ quotation: QuotationItem }>>(`/staff/quotations/${id}/status`, { status });
+    return response.data.data!.quotation;
+  },
+
+  async getSubscriptions(params?: { search?: string; status?: string; plan?: string }): Promise<SubscriptionItem[]> {
+    const response = await apiClient.get<ApiResponse<{ subscriptions: SubscriptionItem[] }>>('/staff/subscriptions', { params });
+    return response.data.data?.subscriptions || [];
+  },
+
+  async getSubscriptionDetails(id: string): Promise<{
+    subscription: SubscriptionItem;
+    invoices: InvoiceItem[];
+  }> {
+    const response = await apiClient.get<ApiResponse<{
+      subscription: SubscriptionItem;
+      invoices: InvoiceItem[];
+    }>>(`/staff/subscriptions/${id}`);
+    return response.data.data!;
+  },
+
+  async getInvoices(params?: { search?: string; status?: string }): Promise<InvoiceItem[]> {
+    const response = await apiClient.get<ApiResponse<{ invoices: InvoiceItem[] }>>('/staff/invoices', { params });
+    return response.data.data?.invoices || [];
+  },
+
+  async confirmInvoice(id: string): Promise<InvoiceItem> {
+    const response = await apiClient.patch<ApiResponse<{ invoice: InvoiceItem }>>(`/staff/invoices/${id}/confirm`);
+    return response.data.data!.invoice;
+  },
+
+  async getPayments(params?: { search?: string; method?: string }): Promise<PaymentItem[]> {
+    const response = await apiClient.get<ApiResponse<{ payments: PaymentItem[] }>>('/staff/payments', { params });
+    return response.data.data?.payments || [];
+  },
+
+  async recordPayment(payload: {
+    invoiceId: string;
+    method: 'UPI' | 'BANK_TRANSFER' | 'CASH' | 'CARD';
+    reference: string;
+    amount: number;
+    notes?: string;
+  }): Promise<{ payment: PaymentItem; invoice: InvoiceItem }> {
+    const response = await apiClient.post<ApiResponse<{ payment: PaymentItem; invoice: InvoiceItem }>>('/staff/payments', payload);
+    return response.data.data!;
+  },
+
+  async getReports(): Promise<StaffReportsData> {
+    const response = await apiClient.get<ApiResponse<{ reports: StaffReportsData }>>('/staff/reports');
+    return response.data.data!.reports;
   },
 };

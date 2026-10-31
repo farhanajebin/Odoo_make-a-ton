@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
+import { StaffLayout } from '../components/layout/StaffLayout';
 import { OverviewPage } from '../pages/OverviewPage';
 import { UpcomingPage } from '../pages/UpcomingPage';
 import { LoginPage } from '../pages/auth/LoginPage';
@@ -8,6 +9,13 @@ import { RegisterPage } from '../pages/auth/RegisterPage';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 import { StaffDashboardPage } from '../pages/staff/StaffDashboardPage';
+import { StaffCustomersPage } from '../pages/staff/StaffCustomersPage';
+import { StaffQuotationsPage } from '../pages/staff/StaffQuotationsPage';
+import { StaffSubscriptionsPage } from '../pages/staff/StaffSubscriptionsPage';
+import { StaffInvoicesPage } from '../pages/staff/StaffInvoicesPage';
+import { StaffPaymentsPage } from '../pages/staff/StaffPaymentsPage';
+import { StaffReportsPage } from '../pages/staff/StaffReportsPage';
+import { StaffProfilePage } from '../pages/staff/StaffProfilePage';
 import { CustomerPortalPage } from '../pages/customer/CustomerPortalPage';
 import { StaffManagementPage } from '../pages/admin/StaffManagementPage';
 import { AuditSecurityPage } from '../pages/admin/AuditSecurityPage';
@@ -33,6 +41,26 @@ export const AppRoutes: React.FC = () => {
 
       {/* Protected Enterprise SaaS Hierarchy */}
       <Route element={<ProtectedRoute />}>
+        {/* ================================================================= */}
+        {/* STAFF OPERATIONAL DASHBOARD (Floating Black Sidebar & White Canvas) */}
+        {/* ================================================================= */}
+        <Route element={<RoleRoute allowedRoles={['STAFF', 'ADMIN']} />}>
+          <Route element={<StaffLayout />}>
+            <Route path="/staff" element={<StaffDashboardPage />} />
+            <Route path="/staff/dashboard" element={<Navigate to="/staff" replace />} />
+            <Route path="/staff/customers" element={<StaffCustomersPage />} />
+            <Route path="/staff/quotations" element={<StaffQuotationsPage />} />
+            <Route path="/staff/subscriptions" element={<StaffSubscriptionsPage />} />
+            <Route path="/staff/invoices" element={<StaffInvoicesPage />} />
+            <Route path="/staff/payments" element={<StaffPaymentsPage />} />
+            <Route path="/staff/reports" element={<StaffReportsPage />} />
+            <Route path="/staff/profile" element={<StaffProfilePage />} />
+          </Route>
+        </Route>
+
+        {/* ================================================================= */}
+        {/* CORE PLATFORM & ADMIN INTERFACE (Standard DashboardLayout) */}
+        {/* ================================================================= */}
         <Route element={<DashboardLayout />}>
           {/* ADMIN ONLY ROUTES */}
           <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
@@ -48,11 +76,6 @@ export const AppRoutes: React.FC = () => {
             <Route path="/intelligence" element={<UpcomingPage />} />
             <Route path="/reports" element={<UpcomingPage />} />
             <Route path="/settings" element={<UpcomingPage />} />
-          </Route>
-
-          {/* STAFF & ADMIN OPERATIONAL ROUTES */}
-          <Route element={<RoleRoute allowedRoles={['STAFF', 'ADMIN']} />}>
-            <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
             <Route path="/customers" element={<UpcomingPage />} />
             <Route path="/quotations" element={<UpcomingPage />} />
             <Route path="/subscriptions" element={<UpcomingPage />} />

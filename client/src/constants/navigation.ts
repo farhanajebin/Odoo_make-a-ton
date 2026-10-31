@@ -28,14 +28,14 @@ export const NAVIGATION_ITEMS: NavItem[] = [
   {
     id: 'staff-hub',
     name: 'Staff Operations',
-    path: '/staff/dashboard',
+    path: '/staff',
     iconName: 'Activity',
     badge: 'Live',
     badgeColor: 'teal',
     status: 'active',
     section: 'core',
     description: 'Staff operational portal and triage queue',
-    allowedRoles: ['STAFF'],
+    allowedRoles: ['STAFF', 'ADMIN'],
   },
   {
     id: 'customer-portal',
