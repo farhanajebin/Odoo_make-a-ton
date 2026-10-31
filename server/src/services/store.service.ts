@@ -57,6 +57,40 @@ export interface AuditLogData {
   createdAt: Date;
 }
 
+export type BillingFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+export type PlanPricingMode = 'PRODUCT_BASED' | 'VARIANT_BASED' | 'CUSTOM';
+export type PlanStatus = 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
+
+export interface SubscriptionPlanData {
+  id: string;
+  name: string;
+  description?: string | null;
+  productId: string;
+  variantId?: string | null;
+  billingFrequency: BillingFrequency;
+  pricingMode: PlanPricingMode;
+  unitPrice: string;
+  currency: string;
+  minimumQuantity: number;
+  availabilityStart: string;
+  availabilityEnd?: string | null;
+  status: PlanStatus;
+  createdById?: string | null;
+  archivedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PlanHistoryEntryData {
+  id: string;
+  planId: string;
+  actorId?: string | null;
+  action: string;
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+  createdAt: Date;
+}
+
 // -----------------------------------------------------------------------------
 // In-Memory Fallback State (Active whenever PostgreSQL is not connected)
 // -----------------------------------------------------------------------------
@@ -137,6 +171,8 @@ const MEMORY_USERS: UserData[] = [
 const MEMORY_RESET_TOKENS: PasswordResetTokenData[] = [];
 const MEMORY_REFRESH_TOKENS: RefreshTokenData[] = [];
 const MEMORY_AUDIT_LOGS: AuditLogData[] = [];
+const MEMORY_SUBSCRIPTION_PLANS: SubscriptionPlanData[] = [];
+const MEMORY_PLAN_HISTORY: PlanHistoryEntryData[] = [];
 
 class StoreService {
   private isPrismaHealthy: boolean | null = null;
@@ -454,7 +490,7 @@ class StoreService {
         },
       });
     }
-    return MEMORY_USERS.filter((u) => u.role.name === 'ADMIN' && u.isActive).length;
+    return MEMORY_USERS.filter((u: UserData) => u.role.name === 'ADMIN' && u.isActive).length;
   }
 
   async listStaff(searchQuery?: string): Promise<UserData[]> {
@@ -477,7 +513,7 @@ class StoreService {
         orderBy: { createdAt: 'desc' },
       });
 
-      return users.map((u) => ({
+      return users.map((u: any) => ({
         id: u.id,
         email: u.email,
         passwordHash: u.passwordHash,
@@ -501,17 +537,17 @@ class StoreService {
       }));
     }
 
-    let staff = MEMORY_USERS.filter((u) => u.role.name === 'STAFF');
+    let staff = MEMORY_USERS.filter((u: UserData) => u.role.name === 'STAFF');
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       staff = staff.filter(
-        (u) =>
+        (u: UserData) =>
           u.fullName.toLowerCase().includes(q) ||
           u.email.toLowerCase().includes(q) ||
           (u.department && u.department.toLowerCase().includes(q))
       );
     }
-    return staff.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).map((u) => ({ ...u }));
+    return staff.sort((a: UserData, b: UserData) => b.createdAt.getTime() - a.createdAt.getTime()).map((u: UserData) => ({ ...u }));
   }
 
   // ---------------------------------------------------------------------------
@@ -696,6 +732,141 @@ class StoreService {
   }
 
   // ---------------------------------------------------------------------------
+  // Subscription Plan & History Operations
+  // ---------------------------------------------------------------------------
+  async listPlans(filters: {
+    search?: string;
+    status?: string;
+    billingFrequency?: string;
+    productId?: string;
+  } = {}): Promise<SubscriptionPlanData[]> {
+    const normalizedSearch = (filters.search || '').trim().toLowerCase();
+
+    return MEMORY_SUBSCRIPTION_PLANS.filter((plan) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        plan.name.toLowerCase().includes(normalizedSearch) ||
+        (plan.description || '').toLowerCase().includes(normalizedSearch) ||
+        plan.productId.toLowerCase().includes(normalizedSearch);
+
+      const matchesStatus = !filters.status || plan.status === filters.status.toUpperCase();
+      const matchesFrequency =
+        !filters.billingFrequency || plan.billingFrequency === filters.billingFrequency.toUpperCase();
+      const matchesProduct = !filters.productId || plan.productId === filters.productId;
+
+      return matchesSearch && matchesStatus && matchesFrequency && matchesProduct;
+    }).sort((left, right) => right.updatedAt.getTime() - left.updatedAt.getTime());
+  }
+
+  async findPlanById(id: string): Promise<SubscriptionPlanData | null> {
+    const found = MEMORY_SUBSCRIPTION_PLANS.find((plan) => plan.id === id);
+    return found ? { ...found } : null;
+  }
+
+  async createPlan(data: {
+    name: string;
+    description?: string | null;
+    productId: string;
+    variantId?: string | null;
+    billingFrequency?: BillingFrequency;
+    pricingMode?: PlanPricingMode;
+    unitPrice: string;
+    currency?: string;
+    minimumQuantity?: number;
+    availabilityStart: string;
+    availabilityEnd?: string | null;
+    status?: PlanStatus;
+    createdById?: string | null;
+  }): Promise<SubscriptionPlanData> {
+    const planId = `plan_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    const now = new Date();
+    const plan: SubscriptionPlanData = {
+      id: planId,
+      name: data.name.trim(),
+      description: data.description || null,
+      productId: data.productId,
+      variantId: data.variantId || null,
+      billingFrequency: data.billingFrequency || 'MONTHLY',
+      pricingMode: data.pricingMode || 'PRODUCT_BASED',
+      unitPrice: data.unitPrice,
+      currency: data.currency || 'USD',
+      minimumQuantity: data.minimumQuantity ?? 1,
+      availabilityStart: data.availabilityStart,
+      availabilityEnd: data.availabilityEnd || null,
+      status: data.status || 'DRAFT',
+      createdById: data.createdById || null,
+      archivedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    MEMORY_SUBSCRIPTION_PLANS.push(plan);
+    return { ...plan };
+  }
+
+  async updatePlan(
+    id: string,
+    data: Partial<{
+      name: string;
+      description: string | null;
+      productId: string;
+      variantId: string | null;
+      billingFrequency: BillingFrequency;
+      pricingMode: PlanPricingMode;
+      unitPrice: string;
+      currency: string;
+      minimumQuantity: number;
+      availabilityStart: string;
+      availabilityEnd: string | null;
+      status: PlanStatus;
+      archivedAt: Date | null;
+    }>
+  ): Promise<SubscriptionPlanData | null> {
+    const index = MEMORY_SUBSCRIPTION_PLANS.findIndex((plan) => plan.id === id);
+    if (index === -1) {
+      return null;
+    }
+
+    const current = MEMORY_SUBSCRIPTION_PLANS[index];
+    const updated: SubscriptionPlanData = {
+      ...current,
+      ...data,
+      updatedAt: new Date(),
+      availabilityEnd: data.availabilityEnd !== undefined ? data.availabilityEnd : current.availabilityEnd,
+      archivedAt: data.archivedAt !== undefined ? data.archivedAt : current.archivedAt,
+    };
+
+    MEMORY_SUBSCRIPTION_PLANS[index] = updated;
+    return { ...updated };
+  }
+
+  async createPlanHistoryEntry(data: {
+    planId: string;
+    actorId?: string | null;
+    action: string;
+    before?: Record<string, unknown> | null;
+    after?: Record<string, unknown> | null;
+  }): Promise<PlanHistoryEntryData> {
+    const entry: PlanHistoryEntryData = {
+      id: `plan_hist_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`,
+      planId: data.planId,
+      actorId: data.actorId || null,
+      action: data.action,
+      before: data.before || null,
+      after: data.after || null,
+      createdAt: new Date(),
+    };
+
+    MEMORY_PLAN_HISTORY.push(entry);
+    return { ...entry };
+  }
+
+  async listPlanHistory(planId: string): Promise<PlanHistoryEntryData[]> {
+    return MEMORY_PLAN_HISTORY.filter((entry) => entry.planId === planId)
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+  }
+
+  // ---------------------------------------------------------------------------
   // Audit Log Operations
   // ---------------------------------------------------------------------------
   async createAuditLog(data: {
@@ -759,7 +930,7 @@ class StoreService {
         take: limit,
         orderBy: { createdAt: 'desc' },
       });
-      return logs.map((l) => ({
+      return logs.map((l: any) => ({
         id: l.id,
         userId: l.userId,
         action: l.action,

@@ -2,7 +2,7 @@
 
 > **"Every recurring transaction. One intelligent ecosystem."**  
 > Product Category: Intelligent Subscription Management & Revenue Operations Platform  
-> Milestone: **COMMIT 01 / 11 — Foundation Core**
+> Milestone: **COMMIT 04 / 11 — Subscription Plan & Pricing Engine**
 
 ---
 
@@ -123,7 +123,7 @@ loopnex/
 - **COMMIT 01 (Current)**: Foundation Core, Project Architecture, Express Health, Prisma Schema, Initial SaaS Dashboard.
 - **COMMIT 02**: Operational Command Center & Real-Time Operational Triage.
 - **COMMIT 03**: Customer Entity, Multi-Currency Credit Lines, Hierarchical Accounts.
-- **COMMIT 04**: Product Catalog, Pricing Engine, Metered Usage Units & SKUs.
+- **COMMIT 04**: Subscription Plan Studio, Pricing Engine, product-derived pricing, lifecycle controls, and historical plan audits.
 - **COMMIT 05**: B2B Quotation Builder (CPQ), Contract Templates & Approval Workflows.
 - **COMMIT 06**: Subscription Lifecycle Engine, Upgrades, Downgrades & Proration.
 - **COMMIT 07**: Automated Invoice Generation, Dunning Cycles & Tax Engine.

@@ -1,6 +1,6 @@
 # LOOPNEX — Database Design & Schema Specifications
 
-> **Milestone: COMMIT 01 — Foundation Core**  
+> **Milestone: COMMIT 04 — Subscription Plan & Pricing Engine**  
 > Database Engine: **PostgreSQL**  
 > ORM: **Prisma ORM (v6.4+)**
 
@@ -65,7 +65,7 @@ erDiagram
 | 4 | **Customer** | `customers` | Core Operations | Corporate subscriber accounts, tax IDs, credit balances | Balances |
 | 5 | **Product** | `products` | Catalog | Master service definitions and SKU groupings | None |
 | 6 | **ProductVariant** | `product_variants` | Catalog | Specific add-ons, storage tiers, or license seats | `price (12, 2)` |
-| 7 | **SubscriptionPlan** | `subscription_plans` | Catalog | Recurring cadences (Monthly, Annual), trial policies | `price (12, 2)` |
+| 7 | **SubscriptionPlan** | `subscription_plans` | Catalog | Recurring pricing plans with frequency, pricing mode, and availability windows | `unitPrice (12, 2)` |
 | 8 | **QuotationTemplate** | `quotation_templates` | CPQ Engine | Pre-configured legal terms and quotation layouts | None |
 | 9 | **Quotation** | `quotations` | CPQ Engine | B2B proposal contracts with approval statuses | `subtotal, total (12, 2)` |
 | 10 | **QuotationLine** | `quotation_lines` | CPQ Engine | Line items, quantities, and negotiated unit rates | `unitPrice, total (12, 2)` |
@@ -83,7 +83,17 @@ erDiagram
 
 ---
 
-## 4. Migration & Schema Verification
+## 4. Subscription Plan & History Model
+
+The plan engine introduces a dedicated catalog layer for repeatable recurring pricing configurations.
+
+- `subscription_plans` stores product affinity, billing cadence, pricing mode, minimum quantity, availability dates, lifecycle status, and creator metadata.
+- `plan_history` captures before/after snapshots for plan lifecycle and financial changes to preserve an audit trail without exposing secrets or tokens.
+- Monetary values remain stored as exact decimal amounts, and lifecycle transitions are validated before accepting status updates.
+
+---
+
+## 5. Migration & Schema Verification
 
 Prisma is configured with PostgreSQL as its target provider.
 

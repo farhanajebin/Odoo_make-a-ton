@@ -114,6 +114,37 @@ enum AuditAction {
   STATUS_CHANGE
 }
 
+enum BillingFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum PlanPricingMode {
+  PRODUCT_BASED
+  VARIANT_BASED
+  CUSTOM
+}
+
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum PlanHistoryAction {
+  CREATED
+  UPDATED
+  PRICE_CHANGED
+  PRICING_MODE_CHANGED
+  BILLING_FREQUENCY_CHANGED
+  MINIMUM_QUANTITY_CHANGED
+  AVAILABILITY_CHANGED
+  STATUS_CHANGED
+}
+
 // ------------------------------------------------------------------------------
 // Foundational Security & Identity Models (Commit 01 Core)
 // ------------------------------------------------------------------------------
@@ -153,6 +184,8 @@ model User {
   notifications       Notification[]
   passwordResetTokens PasswordResetToken[]
   refreshTokens       RefreshToken[]
+  createdPlans        SubscriptionPlan[]
+  planHistoryEntries  PlanHistory[]
 
   @@index([email])
   @@index([roleId])
@@ -232,27 +265,56 @@ model ProductVariant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  plans SubscriptionPlan[]
+
   @@map("product_variants")
 }
 
 model SubscriptionPlan {
-  id            String         @id @default(cuid())
-  productId     String
-  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  code          String         @unique
-  name          String
-  description   String?
-  cadence       BillingCadence @default(MONTHLY)
-  price         Decimal        @db.Decimal(12, 2)
-  currency      String         @default("USD")
-  trialDays     Int            @default(0)
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                 String           @id @default(cuid())
+  name               String
+  description        String?
+  productId          String
+  product            Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId          String?
+  variant            ProductVariant?  @relation(fields: [variantId], references: [id])
+  billingFrequency   BillingFrequency @default(MONTHLY)
+  pricingMode        PlanPricingMode  @default(PRODUCT_BASED)
+  unitPrice          Decimal          @db.Decimal(12, 2)
+  currency           String           @default("USD")
+  minimumQuantity    Int              @default(1)
+  availabilityStart  DateTime
+  availabilityEnd    DateTime?
+  status             PlanStatus       @default(DRAFT)
+  createdById        String?
+  createdBy          User?            @relation(fields: [createdById], references: [id])
+  archivedAt         DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
-  subscriptions Subscription[]
+  histories          PlanHistory[]
+  subscriptions      Subscription[]
 
+  @@index([productId])
+  @@index([variantId])
+  @@index([status])
+  @@index([billingFrequency])
   @@map("subscription_plans")
+}
+
+model PlanHistory {
+  id            String           @id @default(cuid())
+  planId        String
+  plan          SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  actorId       String?
+  actor         User?            @relation(fields: [actorId], references: [id])
+  action        PlanHistoryAction
+  before        Json?
+  after         Json?
+  createdAt     DateTime         @default(now())
+
+  @@index([planId, createdAt])
+  @@map("plan_history")
 }
 
 model QuotationTemplate {

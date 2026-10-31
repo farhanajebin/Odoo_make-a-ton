@@ -50,7 +50,27 @@ This repository represents **COMMIT 01** of an 11-milestone competition engineer
 
 ---
 
-## 3. Technology Stack
+## 3. Commit 04 — Subscription Plan & Pricing Engine
+
+This milestone adds a production-grade subscription plan studio, built for recurring billing and configurable pricing workflows.
+
+### Included in this milestone
+- Subscription plan catalog with billing cadence, price, quantity rules, availability dates, and lifecycle status.
+- Decimal-safe pricing calculations using backend validation and exact currency math.
+- Product-derived and variant-derived pricing modes with optional custom override.
+- Lifecycle controls for draft, active, paused, and archived plans.
+- REST APIs for plan creation, edits, pricing previews, lifecycle changes, and audit/history access.
+- Supporting database schema and migration artifacts for plan and history tracking.
+
+### Implementation status
+- ✅ Plan catalog model and plan history model prepared in Prisma schema.
+- ✅ Plan pricing utilities enforce decimal-safe calculations and minimum quantity validation.
+- ✅ Backend REST endpoints support plan management and pricing preview workflows.
+- ✅ Documentation and migration artifacts created for the plan engine.
+
+---
+
+## 4. Technology Stack
 
 ### Frontend Client (`/client`)
 - **Framework**: React 18 (TypeScript)
