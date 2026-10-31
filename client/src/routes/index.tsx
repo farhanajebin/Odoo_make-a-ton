@@ -14,6 +14,7 @@ import { AuditSecurityPage } from '../pages/admin/AuditSecurityPage';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import { RoleRoute } from '../components/auth/RoleRoute';
 import { AdminApp } from '../admin/AdminApp';
+import { CustomerApp } from '../customer/CustomerApp';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -26,6 +27,9 @@ export const AppRoutes: React.FC = () => {
 
       {/* NEW INDEPENDENT ADMIN PANEL — Isolated at /admin/* */}
       <Route path="/admin/*" element={<AdminApp />} />
+
+      {/* NEW INDEPENDENT CUSTOMER PORTAL — Isolated at /customer/* */}
+      <Route path="/customer/*" element={<CustomerApp />} />
 
       {/* Protected Enterprise SaaS Hierarchy */}
       <Route element={<ProtectedRoute />}>
